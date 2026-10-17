@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Miami Weather</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <form id="search">
+      <input id="city" type="text" placeholder="Search a city…" autocomplete="off">
+      <button type="submit">Go</button>
+    </form>
+
+    <section id="current" class="card">
+      <h1 id="place">Miami, Florida</h1>
+      <div class="now">
+        <span id="icon" class="icon">⏳</span>
+        <span id="temp" class="temp">--°</span>
+      </div>
+      <p id="desc">Loading…</p>
+      <ul class="details">
+        <li>Feels like <strong id="feels">--°</strong></li>
+        <li>Humidity <strong id="humidity">--%</strong></li>
+        <li>Wind <strong id="wind">-- mph</strong></li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>7-Day Forecast</h2>
+      <ul id="forecast" class="forecast"></ul>
+    </section>
+
+    <footer>Data from <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a></footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
