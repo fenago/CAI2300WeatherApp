@@ -73,9 +73,10 @@ function setTheme(value) {
     delete document.documentElement.dataset.theme;
   }
   try { localStorage.setItem("theme", value); } catch (e) {}
-  themeControl.dataset.active = value;
-  themeControl.querySelectorAll("button").forEach((b) => {
-    b.setAttribute("aria-checked", String(b.dataset.value === value));
+  themeControl.querySelectorAll("button").forEach((b, i) => {
+    const on = b.dataset.value === value;
+    b.setAttribute("aria-checked", String(on));
+    if (on) themeControl.style.setProperty("--i", i);
   });
 }
 
@@ -85,6 +86,26 @@ themeControl.addEventListener("click", (e) => {
 });
 
 setTheme(document.documentElement.dataset.theme || "system");
+
+/* ---------- Tabs (Weather / Classifier) ---------- */
+const tabs = $("tabs");
+const VIEW_TITLES = { weather: null, classifier: "Pre-Flight Checklist · Classifier" };
+let weatherTitle = document.title;
+
+function showView() {
+  const view = location.hash === "#classifier" ? "classifier" : "weather";
+  document.documentElement.dataset.view = view;
+  tabs.querySelectorAll("a").forEach((a, i) => {
+    const on = a.dataset.value === view;
+    if (on) { a.setAttribute("aria-current", "page"); tabs.style.setProperty("--i", i); }
+    else a.removeAttribute("aria-current");
+  });
+  document.title = VIEW_TITLES[view] || weatherTitle;
+  document.dispatchEvent(new CustomEvent("viewchange", { detail: view }));
+}
+
+window.addEventListener("hashchange", showView);
+showView();
 
 /* ---------- Data ---------- */
 async function getWeather(place) {
@@ -120,7 +141,8 @@ function renderHero(place, c, d) {
   $("temp").textContent = deg(c.temperature_2m);
   $("desc").textContent = describe(c.weather_code)[0];
   $("hilo").textContent = `H:${deg(d.temperature_2m_max[0])}  L:${deg(d.temperature_2m_min[0])}`;
-  document.title = `${deg(c.temperature_2m)} ${place.name} · Weather`;
+  weatherTitle = `${deg(c.temperature_2m)} ${place.name} · Weather`;
+  if (document.documentElement.dataset.view === "weather") document.title = weatherTitle;
 }
 
 function renderHourly(c, h) {

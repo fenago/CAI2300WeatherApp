@@ -12,13 +12,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
   <script>
-    // Apply saved theme before first paint to avoid a flash
+    // Apply saved theme and view before first paint to avoid a flash
     try {
       const t = localStorage.getItem("theme");
       if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
     } catch (e) {}
+    document.documentElement.dataset.view = location.hash === "#classifier" ? "classifier" : "weather";
   </script>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="classifier.css">
 </head>
 <body>
   <div class="backdrop" aria-hidden="true">
@@ -29,12 +31,19 @@
 
   <main>
     <header class="toolbar">
-      <form id="search" class="glass search" role="search">
-        <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="city" type="search" placeholder="Search for a city" autocomplete="off" aria-label="Search for a city">
-      </form>
+      <nav class="glass segmented tabs" id="tabs" aria-label="App sections" style="--n:2">
+        <span class="seg-indicator" aria-hidden="true"></span>
+        <a href="#weather" data-value="weather" aria-label="Weather">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.8A6 6 0 1 0 6 16.5"/><path d="M6 16.5A3.5 3.5 0 0 0 9.5 20h8"/></svg>
+          <span>Weather</span>
+        </a>
+        <a href="#classifier" data-value="classifier" aria-label="Classifier">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h6"/><path d="m15 17 2 2 4-4"/></svg>
+          <span>Classifier</span>
+        </a>
+      </nav>
 
-      <div class="glass segmented" id="theme" role="radiogroup" aria-label="Theme">
+      <div class="glass segmented" id="theme" role="radiogroup" aria-label="Theme" style="--n:3">
         <span class="seg-indicator" aria-hidden="true"></span>
         <button type="button" role="radio" data-value="system" aria-label="System theme" title="System">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
@@ -51,39 +60,202 @@
       </div>
     </header>
 
-    <section class="hero" aria-live="polite">
-      <p class="eyebrow" id="updated">&nbsp;</p>
-      <h1 id="place">Miami</h1>
-      <div class="temp" id="temp">--°</div>
-      <p class="condition" id="desc">Loading…</p>
-      <p class="hilo" id="hilo">&nbsp;</p>
-    </section>
+    <!-- ===================== WEATHER ===================== -->
+    <div class="view" id="view-weather">
+      <form id="search" class="glass search" role="search">
+        <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="city" type="search" placeholder="Search for a city" autocomplete="off" aria-label="Search for a city">
+      </form>
 
-    <section class="glass card">
-      <h2 class="card-title">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-        Hourly Forecast
-      </h2>
-      <ol id="hourly" class="hourly"></ol>
-    </section>
+      <section class="hero" aria-live="polite">
+        <p class="eyebrow" id="updated">&nbsp;</p>
+        <h1 id="place">Miami</h1>
+        <div class="temp" id="temp">--°</div>
+        <p class="condition" id="desc">Loading…</p>
+        <p class="hilo" id="hilo">&nbsp;</p>
+      </section>
 
-    <section class="glass card">
-      <h2 class="card-title">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
-        10-Day Forecast
-      </h2>
-      <ol id="daily" class="daily"></ol>
-    </section>
+      <section class="glass card">
+        <h2 class="card-title">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          Hourly Forecast
+        </h2>
+        <ol id="hourly" class="hourly"></ol>
+      </section>
 
-    <section class="tiles" id="tiles"></section>
+      <section class="glass card">
+        <h2 class="card-title">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+          10-Day Forecast
+        </h2>
+        <ol id="daily" class="daily"></ol>
+      </section>
 
-    <p class="error" id="error" role="alert" hidden></p>
+      <section class="tiles" id="tiles"></section>
 
-    <footer>
-      Weather data by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>
-    </footer>
+      <p class="error" id="error" role="alert" hidden></p>
+
+      <footer>
+        Weather data by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>
+      </footer>
+    </div>
+
+    <!-- ===================== CLASSIFIER ===================== -->
+    <div class="view" id="view-classifier">
+      <section class="clf-hero">
+        <p class="eyebrow">Natural Language Processing · Chapter 3, Part 2</p>
+        <h1>Pre-Flight Checklist</h1>
+        <p class="lede">Take a labeled text dataset from a raw CSV to a trained, graded classifier in 18 steps: clean it, balance it, hide a final exam, train TF-IDF + logistic regression, and read every output on the way. It all runs in your browser.</p>
+      </section>
+
+      <div class="clf-layout">
+        <aside class="clf-side">
+          <section class="glass card">
+            <h2 class="card-title">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
+              Pick a dataset
+            </h2>
+            <div class="ds-list" id="ds-list" role="radiogroup" aria-label="Datasets"></div>
+            <button type="button" class="btn ghost wide" id="ds-add">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              Add your own dataset
+            </button>
+          </section>
+
+          <section class="glass card">
+            <h2 class="card-title">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>
+              The <code># &lt;-- CHANGE THIS</code> lines
+            </h2>
+            <form id="settings" class="settings" autocomplete="off">
+              <label class="field"><span>Text column <em>Step 4</em></span>
+                <input id="set-text" list="col-list" required></label>
+              <label class="field"><span>Label column <em>Step 4</em></span>
+                <input id="set-label" list="col-list" required></label>
+              <datalist id="col-list"></datalist>
+              <label class="field"><span>Label map <em>Step 8</em></span>
+                <input id="set-map" placeholder="none (e.g. 0=negative, 1=positive)"></label>
+              <label class="field"><span>KEEP: the two labels <em>Step 11</em></span>
+                <input id="set-keep" placeholder="negative, positive" required></label>
+              <div class="chips" id="keep-chips" hidden></div>
+              <label class="field"><span>Sample rows <em>Step 2</em></span>
+                <input id="set-sample" type="number" min="100" step="100" placeholder="all rows"></label>
+
+              <details class="advanced">
+                <summary>Model knobs (optional experiments)</summary>
+                <div class="grid2">
+                  <label class="field"><span>Test size</span>
+                    <select id="set-test"><option value="0.2">20%</option><option value="0.25">25%</option><option value="0.3" selected>30%</option><option value="0.4">40%</option></select></label>
+                  <label class="field"><span>random_state</span>
+                    <input id="set-seed" type="number" value="42"></label>
+                  <label class="field"><span>N-grams</span>
+                    <select id="set-ngram"><option value="1">(1, 1) words</option><option value="2" selected>(1, 2) + pairs</option><option value="3">(1, 3) + triples</option></select></label>
+                  <label class="field"><span>min_df</span>
+                    <input id="set-mindf" type="number" min="1" value="2"></label>
+                  <label class="field"><span>C (regularization)</span>
+                    <input id="set-c" type="number" min="0.01" step="0.1" value="1"></label>
+                  <label class="field"><span>max_iter</span>
+                    <input id="set-iter" type="number" min="10" step="100" value="1000"></label>
+                </div>
+                <label class="check"><input type="checkbox" id="set-balance" checked> Balance the classes (Step 12)</label>
+                <label class="check"><input type="checkbox" id="set-neg" checked> Keep negations: not / no / nor (Step 9)</label>
+              </details>
+            </form>
+          </section>
+
+          <div class="actions">
+            <button type="button" class="btn primary wide" id="run">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2Z"/></svg>
+              <span>Fly the checklist</span>
+            </button>
+            <div class="row">
+              <button type="button" class="btn ghost" id="download-nb" title="Download a Colab notebook with all 18 cells filled in for this dataset">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+                Notebook
+              </button>
+              <button type="button" class="btn ghost" id="copy-all" title="Copy all 18 Python cells">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+                Copy code
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        <div class="clf-main">
+          <section class="summary" id="summary" hidden></section>
+          <ol class="steps" id="steps"></ol>
+          <p class="fineprint">Steps 2–11 reproduce pandas row for row, and the cleaning and stemming match NLTK word for word. Steps 12–13 shuffle with a different random generator than NumPy, so your accuracy can differ from Colab's by a point or two. That's normal, and a good thing to compare with classmates.</p>
+        </div>
+      </div>
+    </div>
   </main>
 
+  <!-- Add / edit dataset -->
+  <dialog id="ds-dialog" class="modal">
+    <form method="dialog" id="ds-form" class="modal-body" autocomplete="off">
+      <header class="modal-head">
+        <h2 id="ds-dialog-title">Add a dataset</h2>
+        <button type="button" class="icon-btn" id="ds-close" aria-label="Close">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </header>
+
+      <p class="hint">Any labeled text file works: a text column, a label column, and ideally 1,000+ rows. Try <a href="https://www.kaggle.com/datasets" target="_blank" rel="noopener">Kaggle</a>, <a href="https://huggingface.co/datasets" target="_blank" rel="noopener">Hugging Face</a>, or the <a href="https://archive.ics.uci.edu" target="_blank" rel="noopener">UCI repository</a>.</p>
+
+      <label class="field"><span>Name</span><input id="dsf-name" placeholder="e.g. Hotel Reviews" required></label>
+
+      <div class="field"><span>Source</span>
+        <div class="glass segmented src-toggle" id="dsf-src" style="--n:2">
+          <span class="seg-indicator" aria-hidden="true"></span>
+          <button type="button" data-value="url" aria-checked="true">From a URL</button>
+          <button type="button" data-value="file" aria-checked="false">Upload a file</button>
+        </div>
+      </div>
+      <label class="field" id="dsf-url-wrap"><span>File URL (raw CSV / TSV / TXT)</span>
+        <input id="dsf-url" type="url" placeholder="https://raw.githubusercontent.com/…/data.csv"></label>
+      <label class="field" id="dsf-file-wrap" hidden><span>File (.csv, .tsv, .txt)</span>
+        <input id="dsf-file" type="file" accept=".csv,.tsv,.txt,text/csv,text/plain,text/tab-separated-values"></label>
+
+      <div class="grid2">
+        <label class="field"><span>Separator</span>
+          <select id="dsf-sep"><option value="auto">Auto-detect</option><option value=",">Comma ,</option><option value="&#9;">Tab</option><option value=";">Semicolon ;</option><option value="|">Pipe |</option></select></label>
+        <label class="field"><span>Column names (if no header row)</span>
+          <input id="dsf-names" placeholder="label, message" disabled></label>
+      </div>
+      <label class="check"><input type="checkbox" id="dsf-header" checked> First row is a header row</label>
+      <label class="check"><input type="checkbox" id="dsf-quotes"> Treat quote marks as ordinary characters (<code>quoting=3</code>)</label>
+
+      <button type="button" class="btn ghost wide" id="dsf-preview">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        Load preview
+      </button>
+      <p class="error" id="dsf-error" hidden></p>
+
+      <div id="dsf-after" hidden>
+        <p class="hint" id="dsf-summary"></p>
+        <div class="table-wrap"><table class="tbl" id="dsf-head"></table></div>
+        <div class="grid2">
+          <label class="field"><span>Text column</span><select id="dsf-text"></select></label>
+          <label class="field"><span>Label column</span><select id="dsf-label"></select></label>
+        </div>
+        <div class="field"><span>Labels found (click two to KEEP)</span><div class="chips" id="dsf-labels"></div></div>
+        <div class="grid2">
+          <label class="field"><span>Label map (optional)</span><input id="dsf-map" placeholder="0=negative, 1=positive"></label>
+          <label class="field"><span>KEEP</span><input id="dsf-keep" placeholder="negative, positive"></label>
+        </div>
+        <label class="field"><span>Sample rows (optional, for big files)</span><input id="dsf-sample" type="number" min="100" step="100" placeholder="all rows"></label>
+      </div>
+
+      <footer class="modal-foot">
+        <button type="button" class="btn ghost danger" id="dsf-delete" hidden>Delete</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn ghost" id="dsf-cancel">Cancel</button>
+        <button type="submit" class="btn primary" id="dsf-save" disabled>Save dataset</button>
+      </footer>
+    </form>
+  </dialog>
+
   <script src="app.js"></script>
+  <script src="classifier.js"></script>
 </body>
 </html>
