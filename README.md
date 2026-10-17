@@ -2,8 +2,9 @@
 
 Dead-simple weather app. Defaults to Miami, FL. Uses the free [Open-Meteo](https://open-meteo.com/) API — no API key, no signup.
 
-- Current temp, feels like, humidity, wind (°F / mph)
-- 7-day forecast
+- Apple-style glass UI with System / Light / Dark theme switcher (choice is remembered)
+- Current conditions, 24-hour forecast, 10-day forecast with temperature range bars
+- Detail tiles: feels like, humidity, wind, UV index, sunrise/sunset, pressure (°F / mph)
 - Search any city (Open-Meteo geocoding); empty search goes back to Miami
 
 ## Run locally
